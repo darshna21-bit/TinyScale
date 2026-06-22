@@ -16,7 +16,7 @@ if (!MONGO_URL) {
   process.exit(1);
 }
 
-// Connect to MongoDB
+// Connect to MongoDB (skip in test environment to avoid open handles and TLS issues)
 if (process.env.NODE_ENV !== 'test') {
   mongoose.connect(MONGO_URL)
     .then(() => {
@@ -28,19 +28,25 @@ if (process.env.NODE_ENV !== 'test') {
     });
 }
 
-// Connect to Redis
+// Connect to Redis (non-critical, errors handled internally)
 connectRedis();
 
 // Middlewares
 app.set('trust proxy', true);
+
+// Request logger middleware (logs container hostname and request method/url)
+app.use((req, res, next) => {
+  console.log(`[${os.hostname()}] ${req.method} ${req.originalUrl || req.url}`);
+  next();
+});
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Request logger middleware
-app.use((req, res, next) => {
-  console.log(`[${os.hostname()}] ${req.method} ${req.originalUrl || req.url}`);
-  next();
+// Health Check Endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' });
 });
 
 // Routes
@@ -57,4 +63,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = app;
+module.exports = app; // exported for testing purposes if needed

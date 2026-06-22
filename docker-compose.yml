@@ -41,3 +41,14 @@ services:
     depends_on:
       - app1
       - app2
+
+  worker:
+    build: .
+    container_name: tinyscale-worker
+    command: node worker.js
+    env_file:
+      - .env
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
