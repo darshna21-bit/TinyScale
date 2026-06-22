@@ -13,15 +13,24 @@ graph TD
     Client["Client"] -->|HTTP Request| Nginx["Nginx Load Balancer"]
     Nginx -->|least_conn| App1["App Instance 1"]
     Nginx -->|least_conn| App2["App Instance 2"]
-    App1 -->|Rate Limit + Cache Lookup| Redis[("Redis")]
-    App2 -->|Rate Limit + Cache Lookup| Redis
-    App1 -->|Cache Miss + Counter| Mongo[("MongoDB Atlas")]
-    App2 -->|Cache Miss + Counter| Mongo
-    App1 -->|XADD click event| Redis
-    App2 -->|XADD click event| Redis
-    Worker["Worker Service"] -->|XREADGROUP| Redis
-    Worker -->|BulkWrite clicks| Mongo
-    Worker -->|XACK| Redis
+
+    subgraph AppLayer["Application Layer"]
+        App1
+        App2
+    end
+
+    subgraph DataLayer["Data Layer"]
+        Redis[("Redis")]
+        Mongo[("MongoDB Atlas")]
+    end
+
+    App1 --> Redis
+    App2 --> Redis
+    App1 --> Mongo
+    App2 --> Mongo
+
+    Worker["Worker"] -->|XREADGROUP| Redis
+    Worker -->|BulkWrite| Mongo
 ```
 
 ---
