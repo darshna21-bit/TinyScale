@@ -53,12 +53,12 @@ The stack was benchmarked using `autocannon` with a concurrency load of **50 con
 
 ### Key Performance Numbers
 
-| Scenario | Description | Concurrency | Duration | Requests/Sec | p50 Latency | p97.5 Latency | Throughput | Result Summary |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **Scenario A** | Redirect (Cache Warm) | 50 | 20s | 449.80 | 103 ms | 201 ms | 1.07 Mb/s | **100% Cache Hits** (8,996 successful `302 Found` redirects) |
-| **Scenario B** | Redirect (Cold/No Cache) | 1 | Single | 1.00 | 88 ms | 88 ms | 0.00 Mb/s | **1 Cache Miss** (1 request with full DB query and Redis write) |
-| **Scenario C** | Shorten URL (Write Path) | 50 | 20s | 40.21 | 1116 ms | 2048 ms | 0.11 Mb/s | **100% Writes** (804 unique URLs shortened and stored in MongoDB) |
-| **Scenario D** | Rate Limit Behavior | 200 | 10s | 368.20 | 476 ms | 1437 ms | 1.03 Mb/s | **99.5% Rate Limited** (3,664 `429 Too Many Requests` responses served) |
+| Scenario | Description | Requests/Sec | p50 Latency | p97.5 Latency | Result |
+| --- | --- | --- | --- | --- | --- |
+| **Scenario A** | Redirect (Cache Warm) | 449.80 | 103 ms | 201 ms | **100% Cache Hits** (8,996 successful `302 Found` redirects) |
+| **Scenario B** | Redirect (Cold/No Cache) | 1.00 | 88 ms | 88 ms | **1 Cache Miss** (1 request with full DB query and Redis write) |
+| **Scenario C** | Shorten URL (Write Path) | 40.21 | 1116 ms | 2048 ms | **100% Writes** (804 unique URLs shortened and stored in MongoDB) |
+| **Scenario D** | Rate Limit Behavior | 368.20 | 476 ms | 1437 ms | **99.5% Rate Limited** (3,664 `429 Too Many Requests` responses served) |
 
 *Note: Raw outputs of the benchmarks are stored in `results/benchmark-results.txt`.*
 
