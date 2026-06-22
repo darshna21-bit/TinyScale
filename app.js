@@ -53,6 +53,7 @@ app.use(errorHandler);
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`[${os.hostname()}] TinyScale server is running on port ${PORT}`);
+    console.log(`[${os.hostname()}] Base URL is configured as: ${process.env.BASE_URL || `http://localhost:${PORT}`}`);
   });
 }
 
