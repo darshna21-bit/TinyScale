@@ -5,6 +5,7 @@ const cors = require('cors');
 const os = require('os');
 const urlRoutes = require('./routes/urlRoutes');
 const errorHandler = require('./middlewares/errorHandler');
+const { connectRedis } = require('./utils/redisClient');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,6 +27,9 @@ if (process.env.NODE_ENV !== 'test') {
       process.exit(1);
     });
 }
+
+// Connect to Redis
+connectRedis();
 
 // Middlewares
 app.use(cors());

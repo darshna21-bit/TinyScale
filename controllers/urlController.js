@@ -1,6 +1,7 @@
 const Url = require('../models/Url');
 const Counter = require('../models/Counter');
 const { encodeBase62 } = require('../utils/base62');
+const { getRedisClient } = require('../utils/redisClient');
 
 function isValidUrl(string) {
   try {
@@ -91,15 +92,60 @@ exports.shortenUrl = async (req, res, next) => {
 exports.redirectToUrl = async (req, res, next) => {
   try {
     const { shortCode } = req.params;
+    const redisKey = `url:${shortCode}`;
+    let longUrl = null;
 
-    console.log('DATABASE HIT');
+    const redisClient = getRedisClient();
+    if (redisClient) {
+      try {
+        longUrl = await redisClient.get(redisKey);
+      } catch (err) {
+        console.warn('Redis GET failed, falling back to MongoDB:', err.message);
+      }
+    }
+
+    if (longUrl) {
+      console.log('CACHE HIT');
+      await Url.updateOne({ shortCode }, { $inc: { clicks: 1 } });
+      return res.redirect(longUrl);
+    }
+
+    console.log('CACHE MISS');
     const urlDoc = await Url.findOne({ shortCode });
     if (!urlDoc) {
       return res.status(404).json({ error: 'Short URL not found' });
     }
 
+    if (redisClient) {
+      try {
+        await redisClient.set(redisKey, urlDoc.longUrl, { EX: 3600 });
+      } catch (err) {
+        console.warn('Redis SET failed:', err.message);
+      }
+    }
+
     await Url.updateOne({ shortCode }, { $inc: { clicks: 1 } });
     return res.redirect(urlDoc.longUrl);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.flushCache = async (req, res, next) => {
+  try {
+    const { shortCode } = req.params;
+    const redisKey = `url:${shortCode}`;
+    const redisClient = getRedisClient();
+
+    if (!redisClient) {
+      return res.status(503).json({ error: 'Redis client is not connected or offline' });
+    }
+
+    const deleted = await redisClient.del(redisKey);
+    return res.status(200).json({
+      message: deleted ? 'Cache entry cleared successfully' : 'Cache entry not found',
+      shortCode
+    });
   } catch (error) {
     next(error);
   }
