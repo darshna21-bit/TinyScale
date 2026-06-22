@@ -111,6 +111,6 @@ This boots:
 Ensure the stack is running, then run the load tests locally:
 ```bash
 npm install
-node run-benchmarks.js
+npm run benchmark
 ```
 The script will perform the testing sequences, generate metrics, and write them to `results/benchmark-results.txt`.
