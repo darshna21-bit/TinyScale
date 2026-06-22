@@ -10,22 +10,18 @@ The diagram below details the end-to-end request lifecycle and component interac
 
 ```mermaid
 graph TD
-    Client[Client] -->|HTTP Requests| Nginx[Nginx Load Balancer]
-    Nginx -->|least_conn| App1[App Instance 1 (tinyscale-app1)]
-    Nginx -->|least_conn| App2[App Instance 2 (tinyscale-app2)]
-    
-    App1 -->|1. Rate Limit Lua & Cache Lookup| Redis[(Redis Shared Cache & Stream)]
-    App2 -->|1. Rate Limit Lua & Cache Lookup| Redis
-    
-    App1 -->|2. Cache Miss / Counter Increment| Mongo[(MongoDB Atlas)]
-    App2 -->|2. Cache Miss / Counter Increment| Mongo
-    
-    App1 -->|3. Async XADD| Redis
-    App2 -->|3. Async XADD| Redis
-    
-    Worker[Worker Service (worker-primary)] -->|4. XREADGROUP Consume| Redis
-    Worker -->|5. BulkWrite $inc Clicks| Mongo
-    Worker -->|6. XACK Acknowledge| Redis
+    Client["Client"] -->|HTTP Request| Nginx["Nginx Load Balancer"]
+    Nginx -->|least_conn| App1["App Instance 1"]
+    Nginx -->|least_conn| App2["App Instance 2"]
+    App1 -->|Rate Limit + Cache Lookup| Redis[("Redis")]
+    App2 -->|Rate Limit + Cache Lookup| Redis
+    App1 -->|Cache Miss + Counter| Mongo[("MongoDB Atlas")]
+    App2 -->|Cache Miss + Counter| Mongo
+    App1 -->|XADD click event| Redis
+    App2 -->|XADD click event| Redis
+    Worker["Worker Service"] -->|XREADGROUP| Redis
+    Worker -->|BulkWrite clicks| Mongo
+    Worker -->|XACK| Redis
 ```
 
 ---
